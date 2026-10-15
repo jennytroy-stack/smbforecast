@@ -273,6 +273,42 @@
               <span class="text-xs text-trimble-yellowDark bg-amber-50 border border-amber-200 font-bold px-2 py-0.5 rounded">Drives Card 4</span>
             </div>
 
+            <!-- 1-Click Motion Presets -->
+            <div>
+              <div class="flex items-center justify-between mb-1.5">
+                <span class="text-[11px] font-bold text-slate-700">Choose Prospecting Motion:</span>
+                <button type="button" id="toggleRateGuideBtn" class="text-[11px] text-trimble-blue hover:underline font-semibold flex items-center space-x-1">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span>How do I know what to pick?</span>
+                </button>
+              </div>
+              <div class="grid grid-cols-3 gap-1.5">
+                <button type="button" id="btnMotionBaseline" class="px-2 py-1.5 rounded-lg text-[11px] font-bold border border-trimble-blue bg-trimble-pale text-trimble-navy transition-all shadow-2xs">
+                  🎯 Team Baseline (20%)
+                </button>
+                <button type="button" id="btnMotionOutbound" class="px-2 py-1.5 rounded-lg text-[11px] font-semibold border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 transition-all">
+                  ❄️ Cold Outbound (8%)
+                </button>
+                <button type="button" id="btnMotionInbound" class="px-2 py-1.5 rounded-lg text-[11px] font-semibold border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 transition-all">
+                  🔥 Warm Inbound (35%)
+                </button>
+              </div>
+            </div>
+
+            <!-- Expandable Educational Guide -->
+            <div id="rateGuideDrawer" class="hidden bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-[11px] text-slate-700 space-y-2.5">
+              <div class="font-bold text-trimble-navy text-xs flex items-center space-x-1.5">
+                <span>Where do reps get these percentages?</span>
+              </div>
+              <ul class="space-y-1.5 list-disc list-inside text-slate-600 leading-relaxed">
+                <li><strong class="text-slate-800">1. Don't guess (Use Baseline):</strong> Most reps should keep the default <strong>Team Baseline (20%)</strong>. This is pre-calculated by RevOps from historical team data in Salesforce.</li>
+                <li><strong class="text-slate-800">2. Pick your lead motion:</strong> If you are cold prospecting from scratch, click <em>Cold Outbound (8%)</em>. If you work marketing inbound demo requests, click <em>Warm Inbound (35%)</em>.</li>
+                <li><strong class="text-slate-800">3. Want your exact personal rate?</strong> Check last quarter in Salesforce or Salesloft: <code class="font-mono bg-white px-1 py-0.5 rounded border border-slate-200 text-trimble-blue">Held Intros &divide; Accounts Contacted</code>.</li>
+              </ul>
+            </div>
+
             <!-- Explainer callout clarifying the exact distinction -->
             <div class="bg-amber-50/70 border border-amber-200/80 rounded-xl p-3 text-[11px] text-amber-900 flex items-start space-x-2">
               <svg class="w-4 h-4 text-trimble-yellowDark shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1201,6 +1237,62 @@
     ['inputConvIntro', 'inputConvDisc', 'inputConvNeeds'].forEach(id => {
       document.getElementById(id).addEventListener('input', calculateAndRender);
     });
+
+    // Motion Preset Selector Logic
+    const btnMotionBaseline = document.getElementById('btnMotionBaseline');
+    const btnMotionOutbound = document.getElementById('btnMotionOutbound');
+    const btnMotionInbound = document.getElementById('btnMotionInbound');
+    const rateGuideDrawer = document.getElementById('rateGuideDrawer');
+    const toggleRateGuideBtn = document.getElementById('toggleRateGuideBtn');
+
+    function setActiveMotionBtn(activeBtn) {
+      [btnMotionBaseline, btnMotionOutbound, btnMotionInbound].forEach(btn => {
+        if (!btn) return;
+        btn.className = 'px-2 py-1.5 rounded-lg text-[11px] font-semibold border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 transition-all';
+      });
+      if (activeBtn) {
+        activeBtn.className = 'px-2 py-1.5 rounded-lg text-[11px] font-bold border border-trimble-blue bg-trimble-pale text-trimble-navy transition-all shadow-2xs';
+      }
+    }
+
+    if (toggleRateGuideBtn && rateGuideDrawer) {
+      toggleRateGuideBtn.addEventListener('click', () => {
+        rateGuideDrawer.classList.toggle('hidden');
+      });
+    }
+
+    if (btnMotionBaseline) {
+      btnMotionBaseline.addEventListener('click', () => {
+        document.getElementById('inputConvIntro').value = 20;
+        document.getElementById('inputConvDisc').value = 65;
+        document.getElementById('inputConvNeeds').value = 54;
+        setActiveMotionBtn(btnMotionBaseline);
+        calculateAndRender();
+        showToast('Set to Trimble Team Baseline (20% Outreach Yield)');
+      });
+    }
+
+    if (btnMotionOutbound) {
+      btnMotionOutbound.addEventListener('click', () => {
+        document.getElementById('inputConvIntro').value = 8;
+        document.getElementById('inputConvDisc').value = 50;
+        document.getElementById('inputConvNeeds').value = 45;
+        setActiveMotionBtn(btnMotionOutbound);
+        calculateAndRender();
+        showToast('Set to Cold Outbound Motion (8% Outreach Yield)');
+      });
+    }
+
+    if (btnMotionInbound) {
+      btnMotionInbound.addEventListener('click', () => {
+        document.getElementById('inputConvIntro').value = 35;
+        document.getElementById('inputConvDisc').value = 75;
+        document.getElementById('inputConvNeeds').value = 60;
+        setActiveMotionBtn(btnMotionInbound);
+        calculateAndRender();
+        showToast('Set to Warm Inbound / Marketing Motion (35% Yield)');
+      });
+    }
 
     // Initialize on window load
     window.addEventListener('DOMContentLoaded', () => {
