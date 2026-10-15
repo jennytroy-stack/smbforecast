@@ -139,7 +139,7 @@
           <div>
             <div class="flex items-center space-x-2">
               <span id="statusBadge" class="text-xs uppercase font-extrabold px-2.5 py-0.5 rounded-full bg-blue-100 text-trimble-navy">On Track</span>
-              <span id="statusRepName" class="text-xs font-semibold text-slate-500">Alex Morgan — 6 Wks Left</span>
+              <span id="statusRepName" class="text-xs font-semibold text-slate-500">Jon Fishman — 6 Wks Left</span>
             </div>
             <h2 id="statusHeadline" class="text-lg sm:text-xl font-bold text-slate-900 mt-0.5">Projected to land at 100% of Quota</h2>
           </div>
@@ -188,7 +188,7 @@
             <div class="grid grid-cols-2 gap-3.5">
               <div>
                 <label class="block text-xs font-semibold text-slate-600 mb-1">Rep Name</label>
-                <input type="text" id="inputRepName" value="Alex Morgan" class="w-full text-xs sm:text-sm font-semibold rounded-lg border border-slate-200 px-3 py-2 focus:ring-2 focus:ring-trimble-blue focus:outline-none">
+                <input type="text" id="inputRepName" value="Jon Fishman" class="w-full text-xs sm:text-sm font-semibold rounded-lg border border-slate-200 px-3 py-2 focus:ring-2 focus:ring-trimble-blue focus:outline-none">
               </div>
               <div>
                 <label class="block text-xs font-semibold text-slate-600 mb-1">Weeks Left in Quarter</label>
@@ -980,7 +980,7 @@
     }
 
     function getGoogleSheetsModel() {
-      const repName = document.getElementById('inputRepName').value || 'Alex Morgan';
+      const repName = document.getElementById('inputRepName').value || 'Jon Fishman';
       const quota = parseFloat(document.getElementById('inputQuota').value) || 150000;
       const closedWon = parseFloat(document.getElementById('inputClosedWon').value) || 35000;
       const weeksLeft = parseFloat(document.getElementById('inputWeeksLeft').value) || 6;
@@ -1252,7 +1252,7 @@
 
     document.getElementById('resetDefaultsBtn').addEventListener('click', () => {
       stages = JSON.parse(JSON.stringify(defaultStages));
-      document.getElementById('inputRepName').value = 'Alex Morgan';
+      document.getElementById('inputRepName').value = 'Jon Fishman';
       document.getElementById('inputWeeksLeft').value = 6;
       document.getElementById('inputQuota').value = 150000;
       document.getElementById('inputClosedWon').value = 35000;
