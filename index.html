@@ -78,7 +78,7 @@
         <div class="hidden sm:block h-6 w-px bg-slate-200"></div>
         <div>
           <div class="flex items-center space-x-2">
-            <h1 class="text-sm sm:text-base font-bold text-trimble-navy leading-tight">RevPace Forecaster</h1>
+            <h1 class="text-sm sm:text-base font-bold text-trimble-navy leading-tight">SMB Forecaster</h1>
             <span class="text-[10px] uppercase font-extrabold bg-trimble-pale text-trimble-blue border border-trimble-blue/20 px-2 py-0.5 rounded-full">Revenue Operations</span>
           </div>
           <p class="text-[11px] text-slate-500 hidden md:block">Rep Quota Pacing & Top-of-Funnel Capacity Calculator</p>
@@ -909,7 +909,7 @@
       const convProposal = (parseFloat(document.getElementById('inputConvNeeds').value) || 54) / 100;
 
       return [
-        { row: 1, type: 'header', a: 'TRIMBLE REVPACE QUOTA FORECASTER & PACE PLANNER (GOOGLE SHEETS)', b: '', c: '', d: '', e: '' },
+        { row: 1, type: 'header', a: 'TRIMBLE SMB QUOTA FORECASTER & PACE PLANNER (GOOGLE SHEETS)', b: '', c: '', d: '', e: '' },
         { row: 2, type: 'blank', a: '', b: '', c: '', d: '', e: '' },
         { row: 3, type: 'section', a: '1. TARGETS & CURRENT QUARTER STATUS', b: 'Values', c: 'Unit', d: '', e: 'Description' },
         { row: 4, type: 'data', a: 'Rep Name', b: repName, c: 'Text', d: '', e: 'Sales Representative', f_b: repName },
@@ -1196,7 +1196,7 @@
       const weeklyIntros = document.getElementById('metricIntroPace').textContent;
       const weeklyAccounts = document.getElementById('metricAccountsPace')?.textContent || '0 / wk';
 
-      const summary = `Trimble RevPace Quota Pacing Plan for ${repName}
+      const summary = `Trimble SMB Quota Pacing Plan for ${repName}
 - Quota: ${fmtUSD(quota)} | Closed-Won: ${fmtUSD(closedWon)}
 - Weeks Remaining: ${weeksLeft}
 - Projected Landing: ${proj}
