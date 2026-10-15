@@ -1,0 +1,1268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Trimble RevPace | Quota Forecaster & Pace Planner</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            trimble: {
+              blue: '#0063a3',
+              dark: '#004f83',
+              navy: '#0e416c',
+              light: '#217cbb',
+              pale: '#e8f3fb',
+              yellow: '#fbad26',
+              yellowDark: '#e49325',
+              gray: '#252a2e',
+              neutral: '#595e63',
+              green: '#1e8a44',
+              red: '#da212c',
+              border: '#dcedf9'
+            }
+          },
+          fontFamily: {
+            sans: ['"Open Sans"', 'Segoe UI', 'Roboto', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      font-family: 'Open Sans', 'Segoe UI', Roboto, sans-serif;
+      color: #252a2e;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      background: #0063a3;
+      cursor: pointer;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-trimble-gray min-h-screen antialiased">
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div class="flex items-center space-x-3 sm:space-x-4">
+        <!-- Trimble Authentic Logomark & Wordmark -->
+        <div class="flex items-center space-x-2.5">
+          <div class="w-9 h-9 rounded-lg bg-trimble-blue flex items-center justify-center text-white shadow-sm shrink-0">
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
+            </svg>
+          </div>
+          <div class="border-l border-slate-200 pl-3">
+            <div class="flex items-center space-x-2">
+              <span class="text-base sm:text-lg font-extrabold text-trimble-navy tracking-tight">Trimble</span>
+              <span class="text-xs sm:text-sm font-semibold text-slate-600">RevPace</span>
+              <span class="text-[10px] uppercase font-bold bg-trimble-pale text-trimble-dark px-2 py-0.5 rounded-full border border-trimble-border">Sales Ops</span>
+            </div>
+            <p class="text-[11px] text-slate-500">Rep Quota Forecaster & Weekly Pacing Calculator</p>
+          </div>
+        </div>
+      </div>
+      <div class="flex items-center space-x-2 sm:space-x-3">
+        <button id="resetDefaultsBtn" class="px-2.5 sm:px-3 py-1.5 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors border border-slate-200">
+          Reset Benchmarks
+        </button>
+        <button id="exportPlanBtn" class="px-2.5 sm:px-3 py-1.5 text-xs font-semibold text-trimble-dark bg-trimble-pale hover:bg-blue-100 rounded-lg transition-colors flex items-center space-x-1.5 border border-trimble-border">
+          <svg class="w-4 h-4 text-trimble-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+          </svg>
+          <span class="hidden sm:inline">Copy 1:1 Plan</span>
+          <span class="sm:hidden">Copy</span>
+        </button>
+        <button id="copyToSheetsBtn" class="px-3 sm:px-3.5 py-1.5 text-xs font-bold text-white bg-trimble-blue hover:bg-trimble-dark rounded-lg shadow-sm transition-colors flex items-center space-x-1.5">
+          <svg class="w-4 h-4 text-trimble-yellow" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14zM7 7h10v2H7zm0 4h10v2H7zm0 4h7v2H7z"/>
+          </svg>
+          <span class="hidden sm:inline">Google Sheets Export</span>
+          <span class="sm:hidden">Sheets</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <!-- View Switcher Tabs -->
+    <div class="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 pb-3">
+      <div class="flex items-center space-x-2">
+        <button id="tabSimulatorBtn" class="px-4 py-2 text-xs font-bold rounded-xl bg-trimble-blue text-white shadow-sm flex items-center space-x-2 transition-all">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+          </svg>
+          <span>Rep Self-Serve Forecaster</span>
+        </button>
+        <button id="tabSheetsBtn" class="px-4 py-2 text-xs font-bold rounded-xl bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 shadow-sm flex items-center space-x-2 transition-all">
+          <svg class="w-4 h-4 text-trimble-blue" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zm-1 2l5 5h-5V4zm-5 8h8v2H8v-2zm0 4h8v2H8v-2z" />
+          </svg>
+          <span>Google Sheets Formulas & Blueprint</span>
+        </button>
+      </div>
+
+      <div class="flex items-center space-x-2 text-xs text-slate-500">
+        <span class="inline-block w-2.5 h-2.5 rounded-full bg-trimble-blue animate-pulse"></span>
+        <span class="font-medium">Calibrated with Trimble Verified Sales Operations Benchmarks ($5,869 ACV | 39.9% Win Rate)</span>
+      </div>
+    </div>
+
+    <div id="simulatorView">
+      <!-- Top Summary Banner -->
+      <div id="statusAlert" class="mb-6 rounded-2xl p-4 sm:p-5 border transition-all duration-300 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div class="flex items-center space-x-4">
+          <div id="statusIconBg" class="w-12 h-12 rounded-xl flex items-center justify-center text-white shrink-0 shadow-sm">
+            <span id="statusIcon" class="text-2xl font-bold">🎯</span>
+          </div>
+          <div>
+            <div class="flex items-center space-x-2">
+              <span id="statusBadge" class="text-xs uppercase font-extrabold px-2.5 py-0.5 rounded-full">On Track</span>
+              <span id="statusRepName" class="text-xs font-semibold text-slate-500">Alex Morgan — 6 Wks Left</span>
+            </div>
+            <h2 id="statusHeadline" class="text-lg sm:text-xl font-bold text-trimble-navy mt-0.5">Projected to land at 100% of Quota</h2>
+          </div>
+        </div>
+        <div class="flex items-center space-x-6 w-full md:w-auto justify-between md:justify-end border-t md:border-t-0 pt-3 md:pt-0 border-slate-200">
+          <div>
+            <p class="text-xs text-slate-500 font-medium">Gap to Quota</p>
+            <p id="gapMetric" class="text-lg font-bold text-slate-900">$0</p>
+          </div>
+          <div>
+            <p class="text-xs text-slate-500 font-medium">Weekly Intros Needed</p>
+            <p id="weeklyIntrosMetric" class="text-lg font-bold text-trimble-blue">0.0 / wk</p>
+          </div>
+          <div>
+            <p class="text-xs text-slate-500 font-medium">Weekly Proposals Needed</p>
+            <p id="weeklyProposalsMetric" class="text-lg font-bold text-trimble-green">0.0 / wk</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        <!-- LEFT COLUMN: Rep Inputs & Stage Data -->
+        <div class="lg:col-span-5 space-y-6">
+          
+          <!-- Rep Profile & Target Card -->
+          <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div>
+                <h3 class="font-bold text-sm text-slate-900 flex items-center space-x-2">
+                  <span class="w-2.5 h-2.5 rounded-full bg-trimble-blue inline-block"></span>
+                  <span>1. Your Target & Quarter Status</span>
+                </h3>
+                <p class="text-[11px] text-slate-500 mt-0.5">Enter your individual quarterly numbers</p>
+              </div>
+              <div class="flex space-x-1">
+                <button type="button" id="presetBehindBtn" class="text-[10px] bg-slate-100 hover:bg-slate-200 text-slate-600 px-2 py-0.5 rounded font-medium">Deficit Demo</button>
+                <button type="button" id="presetAheadBtn" class="text-[10px] bg-slate-100 hover:bg-slate-200 text-slate-600 px-2 py-0.5 rounded font-medium">Ahead Demo</button>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3.5">
+              <div>
+                <label class="block text-xs font-medium text-slate-600 mb-1">Rep Name</label>
+                <input type="text" id="inputRepName" value="Alex Morgan" class="w-full text-xs sm:text-sm font-semibold rounded-lg border border-slate-200 px-3 py-2 focus:ring-2 focus:ring-trimble-blue focus:outline-none">
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-slate-600 mb-1">Weeks Left in Quarter</label>
+                <input type="number" id="inputWeeksLeft" min="1" max="13" value="6" class="w-full text-xs sm:text-sm font-semibold rounded-lg border border-slate-200 px-3 py-2 focus:ring-2 focus:ring-trimble-blue focus:outline-none">
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3.5">
+              <div>
+                <label class="block text-xs font-medium text-slate-600 mb-1">Quarterly Quota ($)</label>
+                <div class="relative">
+                  <span class="absolute left-3 top-2 text-xs font-semibold text-slate-400">$</span>
+                  <input type="number" id="inputQuota" step="5000" value="150000" class="w-full pl-7 text-xs sm:text-sm font-bold rounded-lg border border-slate-200 px-3 py-2 focus:ring-2 focus:ring-trimble-blue focus:outline-none text-slate-900">
+                </div>
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-slate-600 mb-1">Closed-Won Bookings ($)</label>
+                <div class="relative">
+                  <span class="absolute left-3 top-2 text-xs font-semibold text-slate-400">$</span>
+                  <input type="number" id="inputClosedWon" step="2500" value="35000" class="w-full pl-7 text-xs sm:text-sm font-bold rounded-lg border border-slate-200 px-3 py-2 focus:ring-2 focus:ring-trimble-green focus:outline-none text-trimble-green font-bold">
+                </div>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3.5 pt-1">
+              <div>
+                <div class="flex items-center justify-between mb-1">
+                  <label class="block text-xs font-medium text-slate-600">Average Deal Size (ACV)</label>
+                  <button type="button" id="resetACVBtn" title="Reset to verified Trimble Salesforce benchmark ($5,869)" class="text-[10px] text-trimble-blue font-semibold hover:underline">Trimble SFDC $5,869</button>
+                </div>
+                <div class="relative">
+                  <span class="absolute left-3 top-2 text-xs font-semibold text-slate-400">$</span>
+                  <input type="number" id="inputACV" step="100" value="5869" class="w-full pl-7 text-xs sm:text-sm font-medium rounded-lg border border-slate-200 px-3 py-2 focus:ring-2 focus:ring-trimble-blue focus:outline-none">
+                </div>
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-slate-600 mb-1">Avg Sales Cycle (Days)</label>
+                <input type="number" id="inputSalesCycle" step="5" value="32" class="w-full text-xs sm:text-sm font-medium rounded-lg border border-slate-200 px-3 py-2 focus:ring-2 focus:ring-trimble-blue focus:outline-none">
+              </div>
+            </div>
+          </div>
+
+          <!-- Active Pipeline by Stage Card -->
+          <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div>
+                <h3 class="font-bold text-sm text-slate-900 flex items-center space-x-2">
+                  <span class="w-2.5 h-2.5 rounded-full bg-trimble-blue inline-block"></span>
+                  <span>2. Current Active Pipeline by Stage</span>
+                </h3>
+                <p class="text-[11px] text-slate-500 mt-0.5">Preloaded with verified Trimble stage win rates</p>
+              </div>
+              <span class="text-xs text-slate-500 font-semibold" id="totalRawPipelineDisplay">Total: $0</span>
+            </div>
+
+            <div class="space-y-3.5" id="stagesContainer">
+              <!-- Dynamically populated rows with verified SFDC benchmarks -->
+            </div>
+
+            <div class="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-600">
+              <span class="font-medium">Calculated Weighted Pipeline:</span>
+              <span id="calculatedWeightedPipe" class="font-bold text-trimble-blue text-sm">$0</span>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div>
+                <h3 class="font-bold text-sm text-slate-900 flex items-center space-x-2">
+                  <span class="w-2.5 h-2.5 rounded-full bg-trimble-yellow inline-block"></span>
+                  <span>3. Top-of-Funnel Conversion Ratios</span>
+                </h3>
+                <p class="text-[11px] text-slate-500 mt-0.5">Used to waterfall your weekly activity goals</p>
+              </div>
+              <span class="text-xs text-trimble-yellowDark bg-amber-50 border border-amber-200 font-bold px-2 py-0.5 rounded">Activity Rates</span>
+            </div>
+
+            <div class="space-y-3">
+              <div>
+                <div class="flex justify-between text-xs font-medium text-slate-700 mb-1">
+                  <span>Target Accounts Contacted &rarr; Intro Meeting Held</span>
+                  <span id="convIntroLabel" class="font-bold text-trimble-blue">20%</span>
+                </div>
+                <input type="range" id="inputConvIntro" min="5" max="50" value="20" class="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer">
+              </div>
+
+              <div>
+                <div class="flex justify-between text-xs font-medium text-slate-700 mb-1">
+                  <span>Intro Meeting Held &rarr; Qualified Discovery Call</span>
+                  <span id="convDiscLabel" class="font-bold text-trimble-blue">65%</span>
+                </div>
+                <input type="range" id="inputConvDisc" min="20" max="95" value="65" class="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer">
+              </div>
+
+              <div>
+                <div class="flex justify-between text-xs font-medium text-slate-700 mb-1">
+                  <span>Discovery &rarr; Quote & Proposal / Late Stage</span>
+                  <span id="convNeedsLabel" class="font-bold text-trimble-blue">54%</span>
+                </div>
+                <input type="range" id="inputConvNeeds" min="20" max="95" value="54" class="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer">
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- RIGHT COLUMN: Output Dashboard, Charts & Action Plan -->
+        <div class="lg:col-span-7 space-y-6">
+          
+          <!-- Key Metrics Grid -->
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm relative overflow-hidden">
+              <div class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Projected Land</div>
+              <div id="cardProjectedTotal" class="text-2xl font-black text-slate-900 mt-1">$0</div>
+              <div id="cardQuotaPct" class="text-xs font-bold text-trimble-green mt-1">0% of Quota</div>
+              <div class="w-1.5 h-full absolute left-0 top-0 bg-trimble-blue"></div>
+            </div>
+
+            <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm relative overflow-hidden">
+              <div class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Shortfall / Surplus</div>
+              <div id="cardGapAmount" class="text-2xl font-black text-slate-900 mt-1">$0</div>
+              <div id="cardGapSubtext" class="text-xs font-semibold text-slate-500 mt-1">Remaining gap to quota</div>
+              <div id="cardGapBar" class="w-1.5 h-full absolute left-0 top-0 bg-trimble-yellow"></div>
+            </div>
+
+            <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm relative overflow-hidden">
+              <div class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Pipeline Coverage</div>
+              <div id="cardCoverageRatio" class="text-2xl font-black text-slate-900 mt-1">0.0x</div>
+              <div id="cardCoverageHealth" class="text-xs font-medium text-slate-500 mt-1">SFDC Baseline: 2.51x</div>
+              <div class="w-1.5 h-full absolute left-0 top-0 bg-trimble-light"></div>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm space-y-4">
+            <div class="flex items-center justify-between">
+              <div>
+                <h3 class="font-bold text-sm text-slate-900">Revenue Landing Breakdown</h3>
+                <p class="text-xs text-slate-500">Booked Revenue + Weighted Active Pipeline vs Quota</p>
+              </div>
+              <span id="chartAttainmentPill" class="text-xs font-extrabold px-2.5 py-1 rounded-full bg-slate-100 text-slate-700">Pacing</span>
+            </div>
+
+            <div class="relative w-full h-56">
+              <canvas id="forecastChart"></canvas>
+            </div>
+
+            <!-- Progress Bar to Quota -->
+            <div class="space-y-1.5 pt-2 border-t border-slate-100">
+              <div class="flex justify-between text-xs font-medium">
+                <span class="text-slate-600">Attainment Progress Bar</span>
+                <span id="quotaProgressText" class="font-bold text-slate-800">0%</span>
+              </div>
+              <div class="w-full bg-slate-100 h-3 rounded-full overflow-hidden flex">
+                <div id="barClosedWon" class="bg-trimble-green h-full transition-all duration-500" style="width: 30%"></div>
+                <div id="barWeightedPipe" class="bg-trimble-blue h-full transition-all duration-500" style="width: 45%"></div>
+              </div>
+              <div class="flex items-center justify-between text-[11px] text-slate-400">
+                <div class="flex items-center space-x-1.5">
+                  <span class="inline-block w-2.5 h-2.5 rounded-sm bg-trimble-green"></span>
+                  <span>Closed Won</span>
+                </div>
+                <div class="flex items-center space-x-1.5">
+                  <span class="inline-block w-2.5 h-2.5 rounded-sm bg-trimble-blue"></span>
+                  <span>Weighted Open Pipe</span>
+                </div>
+                <div class="flex items-center space-x-1.5">
+                  <span class="inline-block w-2.5 h-2.5 rounded-sm bg-slate-200"></span>
+                  <span>Remaining Gap</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- The Rep Action Mandate Card -->
+          <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div>
+                <h3 class="font-bold text-sm text-slate-900 flex items-center space-x-2">
+                  <span class="w-2.5 h-2.5 rounded-full bg-trimble-green inline-block"></span>
+                  <span>4. What You Need to Do Each Week to Hit Your Number</span>
+                </h3>
+                <p class="text-xs text-slate-500 mt-0.5">Required pace across the remaining <span id="weeksCallout" class="font-bold text-slate-800">6</span> weeks (based on $5,869 ACV)</p>
+              </div>
+              <div class="flex items-center space-x-1 bg-slate-100 p-0.5 rounded-lg text-[11px]">
+                <button type="button" id="btnViewWeekly" class="px-2.5 py-1 rounded-md font-bold bg-white text-slate-800 shadow-sm">Weekly</button>
+                <button type="button" id="btnViewDaily" class="px-2.5 py-1 rounded-md font-medium text-slate-600 hover:text-slate-800">Daily</button>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div class="bg-slate-50 p-3 rounded-xl border border-slate-100 text-center">
+                <span class="text-[11px] text-slate-500 font-medium block">Deals to Win</span>
+                <span id="metricWinsNeeded" class="text-xl font-black text-slate-900 mt-1 block">0.0</span>
+                <span id="metricWinsPace" class="text-[10px] text-slate-500 font-semibold block mt-0.5">0.0 / wk</span>
+              </div>
+
+              <div class="bg-slate-50 p-3 rounded-xl border border-slate-100 text-center">
+                <span class="text-[11px] text-slate-500 font-medium block">Quotes / Proposals</span>
+                <span id="metricProposalsTotal" class="text-xl font-black text-trimble-blue mt-1 block">0</span>
+                <span id="metricProposalsPace" class="text-[10px] text-trimble-blue font-bold block mt-0.5">0 / wk</span>
+              </div>
+
+              <div class="bg-slate-50 p-3 rounded-xl border border-slate-100 text-center">
+                <span class="text-[11px] text-slate-500 font-medium block">Discovery Calls</span>
+                <span id="metricDiscTotal" class="text-xl font-black text-slate-900 mt-1 block">0</span>
+                <span id="metricDiscPace" class="text-[10px] text-slate-500 font-semibold block mt-0.5">0 / wk</span>
+              </div>
+
+              <div class="bg-slate-50 p-3 rounded-xl border border-slate-100 text-center">
+                <span class="text-[11px] text-slate-500 font-medium block">Intro Meetings</span>
+                <span id="metricIntroTotal" class="text-xl font-black text-trimble-green mt-1 block">0</span>
+                <span id="metricIntroPace" class="text-[10px] text-trimble-green font-bold block mt-0.5">0 / wk</span>
+              </div>
+            </div>
+
+            <div class="bg-trimble-pale rounded-xl p-3.5 border border-trimble-border text-xs text-trimble-dark space-y-1.5">
+              <div class="font-bold flex items-center space-x-1.5 text-trimble-navy">
+                <svg class="w-4 h-4 text-trimble-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span>The Exact Math Applied to Your Pipeline:</span>
+              </div>
+              <p id="formulaExplanation" class="text-slate-700 leading-relaxed font-mono text-[11px]">
+                Loading calculation...
+              </p>
+            </div>
+          </div>
+
+          <!-- Tactical Programs & Recommendations -->
+          <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm space-y-3">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div>
+                <h3 class="font-bold text-sm text-slate-900">Recommended Plays to Bridge Your Number</h3>
+                <p class="text-xs text-slate-500">Action items matched to your cycle length and weeks remaining</p>
+              </div>
+              <span id="programTag" class="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded font-medium">Strategic</span>
+            </div>
+
+            <div class="space-y-3" id="playbookList">
+              <!-- Dynamically populated via JS -->
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab 2: Google Sheets Blueprint View -->
+    <div id="sheetsView" class="hidden space-y-6">
+      <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <div class="flex items-center space-x-2">
+            <span class="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold uppercase bg-trimble-pale text-trimble-dark border border-trimble-border">
+              Trimble Google Sheets Model
+            </span>
+            <span class="text-xs text-slate-500 font-medium">Active formulas calibrated with $5,869 ACV</span>
+          </div>
+          <h2 class="text-lg font-bold text-trimble-navy mt-1">Google Sheets Architecture with Live Formulas</h2>
+          <p class="text-xs text-slate-500 mt-0.5">Click any cell to inspect its exact formula or copy all rows directly into <code class="font-mono text-trimble-dark bg-trimble-pale px-1 py-0.5 rounded">sheets.new</code>.</p>
+        </div>
+
+        <div class="flex items-center space-x-3 shrink-0">
+          <button id="downloadCsvBtn" class="px-3.5 py-2 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors flex items-center space-x-1.5 border border-slate-200">
+            <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            </svg>
+            <span>Download CSV (With Formulas)</span>
+          </button>
+
+          <button id="copySheetDirectBtn" class="px-4 py-2 text-xs font-bold text-white bg-trimble-blue hover:bg-trimble-dark rounded-xl shadow-sm transition-all flex items-center space-x-2">
+            <svg class="w-4 h-4 text-trimble-yellow" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
+            </svg>
+            <span>1-Click Copy for Google Sheets</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Formula Bar Simulator -->
+      <div class="bg-trimble-navy text-white rounded-xl p-3 shadow-sm border border-slate-800 flex items-center space-x-3 text-xs font-mono">
+        <div class="flex items-center space-x-2 border-r border-slate-700 pr-3 shrink-0">
+          <span class="text-slate-400 font-semibold">Cell:</span>
+          <span id="formulaCellAddress" class="text-trimble-yellow font-bold px-2 py-0.5 bg-slate-800 rounded">B20</span>
+        </div>
+        <div class="flex items-center space-x-2 flex-1 overflow-x-auto custom-scrollbar">
+          <span class="text-trimble-yellow font-black italic">fx</span>
+          <span id="formulaBarContent" class="text-slate-200 select-all tracking-wide">=B6+B19</span>
+        </div>
+        <div id="formulaExplanationBadge" class="text-[11px] text-slate-300 hidden sm:block shrink-0 border-l border-slate-700 pl-3 font-sans">
+          Closed-Won + Weighted Open Pipeline
+        </div>
+      </div>
+
+      <!-- Spreadsheet Table -->
+      <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="overflow-x-auto custom-scrollbar max-h-[640px]">
+          <table class="w-full border-collapse text-xs text-left" id="sheetsGridTable">
+            <thead class="bg-slate-100 text-slate-600 sticky top-0 z-10 select-none border-b border-slate-200">
+              <tr>
+                <th class="w-12 py-2 px-3 text-center border-r border-slate-200 font-mono text-[11px] text-slate-400 bg-slate-200/70">#</th>
+                <th class="py-2 px-3.5 border-r border-slate-200 font-semibold text-slate-700 min-w-[260px]">A (Metric / Parameter)</th>
+                <th class="py-2 px-3.5 border-r border-slate-200 font-semibold text-slate-700 min-w-[170px]">B (Value / Primary Formula)</th>
+                <th class="py-2 px-3.5 border-r border-slate-200 font-semibold text-slate-700 min-w-[140px]">C (Unit / Rate / Weekly)</th>
+                <th class="py-2 px-3.5 border-r border-slate-200 font-semibold text-slate-700 min-w-[150px]">D (Weighted $ / Calc)</th>
+                <th class="py-2 px-3.5 font-semibold text-slate-700 min-w-[200px]">E (Deals / Logic Breakdown)</th>
+              </tr>
+            </thead>
+            <tbody id="sheetsGridBody" class="divide-y divide-slate-100 font-mono text-[11px]">
+              <!-- Populated dynamically via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Notification Toast -->
+  <div id="toast" class="fixed bottom-6 right-6 bg-trimble-navy text-white px-4 py-3 rounded-xl shadow-xl transform translate-y-20 opacity-0 transition-all duration-300 text-xs font-semibold z-50 flex items-center space-x-2 border border-slate-700">
+    <svg class="w-4 h-4 text-trimble-yellow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+    </svg>
+    <span id="toastMsg">Action completed!</span>
+  </div>
+
+  <script>
+    // Trimble Modus color-calibrated stages:
+    // Discovery: 33.3%, Needs Analysis: 27.5%, Quote & Proposal: 54.1%, Negotiate: 83.1%
+    const defaultStages = [
+      { id: 'stage1', name: 'Stage 1: Discovery', winRate: 33.3, amount: 80000, color: '#595e63' },
+      { id: 'stage2', name: 'Stage 2: Needs Analysis', winRate: 27.5, amount: 45000, color: '#217cbb' },
+      { id: 'stage3', name: 'Stage 3: Quote & Proposal', winRate: 54.1, amount: 65000, color: '#0063a3' },
+      { id: 'stage4', name: 'Stage 4: Negotiate / Sent for Signature', winRate: 83.1, amount: 35000, color: '#1e8a44' }
+    ];
+
+    let stages = JSON.parse(JSON.stringify(defaultStages));
+    let forecastChartInstance = null;
+    let paceMode = 'weekly'; // 'weekly' or 'daily'
+
+    // Format currency helper
+    const fmtUSD = (num) => {
+      return '$' + Math.round(num).toLocaleString('en-US');
+    };
+
+    function renderStageInputs() {
+      const container = document.getElementById('stagesContainer');
+      container.innerHTML = '';
+
+      stages.forEach((st, idx) => {
+        const row = document.createElement('div');
+        row.className = 'p-3 bg-slate-50/80 rounded-xl border border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs';
+        row.innerHTML = `
+          <div class="flex-1">
+            <div class="font-bold text-slate-800 flex items-center space-x-1.5">
+              <span class="w-2 h-2 rounded-full" style="background-color: ${st.color}"></span>
+              <span>${st.name}</span>
+            </div>
+            <div class="text-[11px] text-slate-500 mt-0.5">Historical SFDC Win Rate: 
+              <span class="font-bold text-slate-700 stage-winrate-label">${st.winRate}%</span>
+            </div>
+          </div>
+          <div class="flex items-center space-x-2">
+            <div class="w-24">
+              <label class="block text-[10px] text-slate-500 mb-0.5 font-medium">Win Rate (%)</label>
+              <input type="number" step="0.1" min="0" max="100" value="${st.winRate}" data-idx="${idx}" class="stage-rate-input w-full px-2 py-1 bg-white border border-slate-200 rounded-md font-semibold text-slate-800 text-center focus:ring-1 focus:ring-trimble-blue">
+            </div>
+            <div class="w-32">
+              <label class="block text-[10px] text-slate-500 mb-0.5 font-medium">Open Value ($)</label>
+              <div class="relative">
+                <span class="absolute left-2 top-1 text-slate-400 font-bold text-[10px]">$</span>
+                <input type="number" step="1000" min="0" value="${st.amount}" data-idx="${idx}" class="stage-amount-input w-full pl-5 pr-2 py-1 bg-white border border-slate-200 rounded-md font-bold text-slate-800 focus:ring-1 focus:ring-trimble-blue">
+              </div>
+            </div>
+          </div>
+        `;
+        container.appendChild(row);
+      });
+
+      // Bind input events
+      document.querySelectorAll('.stage-rate-input').forEach(input => {
+        input.addEventListener('input', (e) => {
+          const idx = parseInt(e.target.dataset.idx);
+          stages[idx].winRate = parseFloat(e.target.value) || 0;
+          e.target.closest('div').parentElement.previousElementSibling.querySelector('.stage-winrate-label').textContent = `${stages[idx].winRate}%`;
+          calculateAndRender();
+        });
+      });
+
+      document.querySelectorAll('.stage-amount-input').forEach(input => {
+        input.addEventListener('input', (e) => {
+          const idx = parseInt(e.target.dataset.idx);
+          stages[idx].amount = parseFloat(e.target.value) || 0;
+          calculateAndRender();
+        });
+      });
+    }
+
+    function calculateAndRender() {
+      // 1. Rep Target Inputs
+      const repName = document.getElementById('inputRepName').value || 'Rep';
+      const weeksLeft = Math.max(1, parseFloat(document.getElementById('inputWeeksLeft').value) || 6);
+      const quota = Math.max(1, parseFloat(document.getElementById('inputQuota').value) || 150000);
+      const closedWon = Math.max(0, parseFloat(document.getElementById('inputClosedWon').value) || 0);
+      const acv = Math.max(500, parseFloat(document.getElementById('inputACV').value) || 5869);
+      const salesCycleDays = parseFloat(document.getElementById('inputSalesCycle').value) || 32;
+
+      const convIntro = (parseFloat(document.getElementById('inputConvIntro').value) || 20) / 100;
+      const convDisc = (parseFloat(document.getElementById('inputConvDisc').value) || 65) / 100;
+      const convProposal = (parseFloat(document.getElementById('inputConvNeeds').value) || 54) / 100;
+
+      // Update slider labels
+      document.getElementById('convIntroLabel').textContent = `${Math.round(convIntro * 100)}%`;
+      document.getElementById('convDiscLabel').textContent = `${Math.round(convDisc * 100)}%`;
+      document.getElementById('convNeedsLabel').textContent = `${Math.round(convProposal * 100)}%`;
+      document.getElementById('weeksCallout').textContent = weeksLeft;
+
+      // 2. Pipe Calculations
+      let totalRawPipeline = 0;
+      let totalWeightedPipeline = 0;
+
+      stages.forEach(st => {
+        totalRawPipeline += st.amount;
+        totalWeightedPipeline += (st.amount * (st.winRate / 100));
+      });
+
+      document.getElementById('totalRawPipelineDisplay').textContent = `Total Open: ${fmtUSD(totalRawPipeline)}`;
+      document.getElementById('calculatedWeightedPipe').textContent = fmtUSD(totalWeightedPipeline);
+
+      // 3. Projected Landing & Gap
+      const projectedRevenue = closedWon + totalWeightedPipeline;
+      const attainmentPct = Math.round((projectedRevenue / quota) * 100);
+      const gapToQuota = Math.max(0, quota - projectedRevenue);
+      const surplus = projectedRevenue > quota ? projectedRevenue - quota : 0;
+      const coverageRatio = (totalRawPipeline / (quota - closedWon > 0 ? quota - closedWon : 1)).toFixed(2);
+
+      // 4. Activity Waterfall based on Gap
+      const targetVolumeDollars = gapToQuota > 0 ? gapToQuota : (quota * 0.15);
+      const dealsNeededToWin = targetVolumeDollars / acv;
+
+      const proposalWinRate = (stages[2]?.winRate || 54.1) / 100;
+      const proposalsNeeded = dealsNeededToWin / (proposalWinRate > 0 ? proposalWinRate : 0.54);
+      const discoveryCallsNeeded = proposalsNeeded / (convProposal > 0 ? convProposal : 0.54);
+      const introMeetingsNeeded = discoveryCallsNeeded / (convDisc > 0 ? convDisc : 0.65);
+
+      const divisor = paceMode === 'weekly' ? weeksLeft : (weeksLeft * 5);
+      const unitLabel = paceMode === 'weekly' ? '/ wk' : '/ day';
+
+      const paceWins = (dealsNeededToWin / divisor).toFixed(1);
+      const paceProposals = (proposalsNeeded / divisor).toFixed(1);
+      const paceDiscovery = (discoveryCallsNeeded / divisor).toFixed(1);
+      const paceIntros = (introMeetingsNeeded / divisor).toFixed(1);
+
+      document.getElementById('cardProjectedTotal').textContent = fmtUSD(projectedRevenue);
+      document.getElementById('cardQuotaPct').textContent = `${attainmentPct}% of Quota`;
+      document.getElementById('cardCoverageRatio').textContent = `${coverageRatio}x`;
+
+      if (gapToQuota > 0) {
+        document.getElementById('cardGapAmount').textContent = `-${fmtUSD(gapToQuota)}`;
+        document.getElementById('cardGapAmount').className = 'text-2xl font-black text-rose-600 mt-1';
+        document.getElementById('cardGapSubtext').textContent = `${fmtUSD(gapToQuota)} gap to bridge`;
+        document.getElementById('cardGapBar').className = 'w-1.5 h-full absolute left-0 top-0 bg-rose-500';
+      } else {
+        document.getElementById('cardGapAmount').textContent = `+${fmtUSD(surplus)}`;
+        document.getElementById('cardGapAmount').className = 'text-2xl font-black text-trimble-green mt-1';
+        document.getElementById('cardGapSubtext').textContent = `Pacing ahead of quota!`;
+        document.getElementById('cardGapBar').className = 'w-1.5 h-full absolute left-0 top-0 bg-trimble-green';
+      }
+
+      // Coverage health badge
+      const covHealthElem = document.getElementById('cardCoverageHealth');
+      if (coverageRatio < 2.0) {
+        covHealthElem.textContent = 'Low pipeline coverage (<2.0x)';
+        covHealthElem.className = 'text-xs font-semibold text-rose-600 mt-1';
+      } else if (coverageRatio <= 3.5) {
+        covHealthElem.textContent = 'Healthy coverage (Target: 2.51x)';
+        covHealthElem.className = 'text-xs font-medium text-trimble-green mt-1';
+      } else {
+        covHealthElem.textContent = 'High coverage (>3.5x) - check deal hygiene';
+        covHealthElem.className = 'text-xs font-medium text-trimble-blue mt-1';
+      }
+
+      // Status Alert Header
+      const statusAlert = document.getElementById('statusAlert');
+      const statusIconBg = document.getElementById('statusIconBg');
+      const statusBadge = document.getElementById('statusBadge');
+      const statusRepName = document.getElementById('statusRepName');
+      const statusHeadline = document.getElementById('statusHeadline');
+
+      statusRepName.textContent = `${repName} — ${weeksLeft} Wks Left`;
+      document.getElementById('gapMetric').textContent = gapToQuota > 0 ? fmtUSD(gapToQuota) : `$0 (Surplus: ${fmtUSD(surplus)})`;
+      document.getElementById('weeklyIntrosMetric').textContent = `${(introMeetingsNeeded / weeksLeft).toFixed(1)} / wk`;
+      document.getElementById('weeklyProposalsMetric').textContent = `${(proposalsNeeded / weeksLeft).toFixed(1)} / wk`;
+
+      if (attainmentPct >= 100) {
+        statusAlert.className = 'mb-6 rounded-2xl p-4 sm:p-5 border border-emerald-200 bg-emerald-50/70 transition-all duration-300 flex flex-col md:flex-row items-start md:items-center justify-between gap-4';
+        statusIconBg.className = 'w-12 h-12 rounded-xl bg-trimble-green flex items-center justify-center text-white shrink-0 shadow-sm';
+        statusBadge.className = 'text-xs uppercase font-extrabold px-2.5 py-0.5 rounded-full bg-emerald-200 text-emerald-800';
+        statusBadge.textContent = 'Quota Achieved Pace';
+        statusHeadline.textContent = `Projected to land at ${attainmentPct}% of Quota (${fmtUSD(projectedRevenue)})`;
+      } else if (attainmentPct >= 80) {
+        statusAlert.className = 'mb-6 rounded-2xl p-4 sm:p-5 border border-amber-200 bg-amber-50/70 transition-all duration-300 flex flex-col md:flex-row items-start md:items-center justify-between gap-4';
+        statusIconBg.className = 'w-12 h-12 rounded-xl bg-trimble-yellow flex items-center justify-center text-white shrink-0 shadow-sm';
+        statusBadge.className = 'text-xs uppercase font-extrabold px-2.5 py-0.5 rounded-full bg-amber-200 text-amber-900';
+        statusBadge.textContent = 'Striking Distance (80-99%)';
+        statusHeadline.textContent = `Projected at ${attainmentPct}% (${fmtUSD(projectedRevenue)}). ${fmtUSD(gapToQuota)} gap to close.`;
+      } else {
+        statusAlert.className = 'mb-6 rounded-2xl p-4 sm:p-5 border border-rose-200 bg-rose-50/70 transition-all duration-300 flex flex-col md:flex-row items-start md:items-center justify-between gap-4';
+        statusIconBg.className = 'w-12 h-12 rounded-xl bg-trimble-red flex items-center justify-center text-white shrink-0 shadow-sm';
+        statusBadge.className = 'text-xs uppercase font-extrabold px-2.5 py-0.5 rounded-full bg-rose-200 text-rose-900';
+        statusBadge.textContent = 'Critical Pipeline Gap (<80%)';
+        statusHeadline.textContent = `Projected at ${attainmentPct}% (${fmtUSD(projectedRevenue)}). Need ${(introMeetingsNeeded / weeksLeft).toFixed(1)} intros/week immediately.`;
+      }
+
+      document.getElementById('metricWinsNeeded').textContent = dealsNeededToWin.toFixed(1);
+      document.getElementById('metricWinsPace').textContent = `${paceWins} ${unitLabel}`;
+      document.getElementById('metricProposalsTotal').textContent = Math.ceil(proposalsNeeded);
+      document.getElementById('metricProposalsPace').textContent = `${paceProposals} ${unitLabel}`;
+      document.getElementById('metricDiscTotal').textContent = Math.ceil(discoveryCallsNeeded);
+      document.getElementById('metricDiscPace').textContent = `${paceDiscovery} ${unitLabel}`;
+      document.getElementById('metricIntroTotal').textContent = Math.ceil(introMeetingsNeeded);
+      document.getElementById('metricIntroPace').textContent = `${paceIntros} ${unitLabel}`;
+
+      // Progress Bars
+      const closedPct = Math.min(100, Math.round((closedWon / quota) * 100));
+      const pipePct = Math.min(100 - closedPct, Math.round((totalWeightedPipeline / quota) * 100));
+      document.getElementById('barClosedWon').style.width = `${closedPct}%`;
+      document.getElementById('barWeightedPipe').style.width = `${pipePct}%`;
+      document.getElementById('quotaProgressText').textContent = `${attainmentPct}% (${fmtUSD(projectedRevenue)} / ${fmtUSD(quota)})`;
+
+      // Step-by-step formula breakdown
+      document.getElementById('formulaExplanation').innerHTML = `
+        &bull; <strong>Revenue Gap:</strong> Quota (${fmtUSD(quota)}) - [Won (${fmtUSD(closedWon)}) + Weighted Pipe (${fmtUSD(totalWeightedPipeline)})] = <strong>${fmtUSD(gapToQuota)}</strong><br>
+        &bull; <strong>Deals Required:</strong> ${fmtUSD(targetVolumeDollars)} volume &divide; $${acv.toLocaleString()} ACV = <strong>${dealsNeededToWin.toFixed(1)} closed deals</strong><br>
+        &bull; <strong>Proposal Stage Pace:</strong> ${dealsNeededToWin.toFixed(1)} wins &divide; ${(proposalWinRate * 100).toFixed(1)}% proposal win rate = <strong>${proposalsNeeded.toFixed(1)} proposals</strong> (&asymp; <strong>${paceProposals} ${unitLabel}</strong>)<br>
+        &bull; <strong>Discovery Pacing:</strong> ${proposalsNeeded.toFixed(1)} proposals &divide; ${(convProposal * 100).toFixed(0)}% conversion = <strong>${discoveryCallsNeeded.toFixed(1)} calls</strong> (&asymp; <strong>${paceDiscovery} ${unitLabel}</strong>)<br>
+        &bull; <strong>Intro Meetings:</strong> ${discoveryCallsNeeded.toFixed(1)} discovery &divide; ${(convDisc * 100).toFixed(0)}% held = <strong>${introMeetingsNeeded.toFixed(1)} intros</strong> (&asymp; <strong>${paceIntros} ${unitLabel}</strong>)
+      `;
+
+      renderPlaybooks(gapToQuota, weeksLeft, salesCycleDays);
+      updateChart(closedWon, totalWeightedPipeline, gapToQuota, quota);
+      renderGoogleSheetsGrid();
+    }
+
+    function renderPlaybooks(gapToQuota, weeksLeft, salesCycleDays) {
+      const list = document.getElementById('playbookList');
+      const tag = document.getElementById('programTag');
+      if (!list) return;
+
+      const daysLeft = weeksLeft * 7;
+      const isCycleRisk = daysLeft < (salesCycleDays * 0.75);
+
+      let plays = [];
+
+      if (gapToQuota <= 0) {
+        if (tag) {
+          tag.textContent = 'Preserve & Future-Proof';
+          tag.className = 'text-xs bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-medium';
+        }
+        plays = [
+          {
+            title: '1. Early Renewal & Multi-Year Upgrades',
+            desc: 'Offer price-lock guarantees for accounts renewing in the next two quarters in exchange for early commitment before quarter end.',
+            badge: 'Expansion',
+            badgeColor: 'bg-emerald-50 text-emerald-700 border-emerald-200'
+          },
+          {
+            title: '2. Next Quarter Pipeline Reload (Sprint 20%)',
+            desc: 'Allocate 20% of your weekly calendar to top-of-funnel outbound for the following quarter to prevent the classic post-quota valley.',
+            badge: 'Pipeline Health',
+            badgeColor: 'bg-indigo-50 text-indigo-700 border-indigo-200'
+          }
+        ];
+      } else if (isCycleRisk) {
+        if (tag) {
+          tag.textContent = 'Cycle Risk Alert';
+          tag.className = 'text-xs bg-rose-100 text-rose-800 px-2 py-0.5 rounded font-medium';
+        }
+        plays = [
+          {
+            title: '1. Silver Medalist (Closed-Lost Revival Play)',
+            desc: `Days remaining (${daysLeft}d) is shorter than your sales cycle (${salesCycleDays}d). Cold outreach will NOT close in time. Target deals lost 3–6 months ago due to timing or budget where the champion is still active.`,
+            badge: 'Speed to Close',
+            badgeColor: 'bg-amber-50 text-amber-700 border-amber-200'
+          },
+          {
+            title: '2. Executive Sponsor Alignment on Stage 3 & 4 Deals',
+            desc: 'Pair your sales manager or leadership with the economic buyer on all deals in Proposal & Negotiation to remove procurement bottlenecks.',
+            badge: 'Late Stage Acceleration',
+            badgeColor: 'bg-indigo-50 text-indigo-700 border-indigo-200'
+          },
+          {
+            title: '3. Rapid Add-On & Expansion Packages',
+            desc: 'Existing customer add-on cycles run under 14 days. Review active accounts with high product usage for immediate seat expansions.',
+            badge: 'Fast Velocity',
+            badgeColor: 'bg-emerald-50 text-emerald-700 border-emerald-200'
+          }
+        ];
+      } else {
+        if (tag) {
+          tag.textContent = 'Active Sprint';
+          tag.className = 'text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded font-medium';
+        }
+        plays = [
+          {
+            title: '1. Structured Outbound Cadence to High-Fit Accounts',
+            desc: 'Run multi-channel sequences to drive new Intro meetings into Discovery. Target high-intent accounts to feed the top of funnel.',
+            badge: 'Pipeline Gen',
+            badgeColor: 'bg-blue-50 text-blue-700 border-blue-200'
+          },
+          {
+            title: '2. Mutual Action Plan (MAP) for All Evaluation Deals',
+            desc: 'Lock in agreed-upon security, procurement, and contract milestones with prospects currently evaluating proposals.',
+            badge: 'Deal Governance',
+            badgeColor: 'bg-indigo-50 text-indigo-700 border-indigo-200'
+          }
+        ];
+      }
+
+      list.innerHTML = plays.map(p => `
+        <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+          <div>
+            <div class="font-bold text-slate-800 text-xs">${p.title}</div>
+            <div class="text-[11px] text-slate-600 mt-0.5 leading-relaxed">${p.desc}</div>
+          </div>
+          <span class="text-[10px] uppercase font-bold px-2 py-0.5 rounded border self-start sm:self-center shrink-0 ${p.badgeColor}">
+            ${p.badge}
+          </span>
+        </div>
+      `).join('');
+    }
+
+    function updateChart(closedWon, weightedPipe, gap, quota) {
+      const ctx = document.getElementById('forecastChart');
+      if (!ctx) return;
+      
+      if (forecastChartInstance) {
+        forecastChartInstance.destroy();
+      }
+
+      const projected = closedWon + weightedPipe;
+      const attainment = Math.round((projected / quota) * 100);
+      
+      forecastChartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: ['Current Won', 'Weighted Pipe', 'Projected Total', 'Quota Target'],
+          datasets: [{
+            label: 'Revenue ($)',
+            data: [closedWon, weightedPipe, projected, quota],
+            backgroundColor: [
+              '#1e8a44', // Trimble Green
+              '#0063a3', // Trimble Blue
+              projected >= quota ? '#004f83' : '#fbad26', // Trimble Dark or Yellow
+              '#252a2e'  // Trimble Gray
+            ],
+            borderRadius: 8,
+            borderSkipped: false
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  return ' ' + fmtUSD(context.parsed.y);
+                }
+              }
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: {
+                callback: function(value) {
+                  return '$' + (value >= 1000 ? (value / 1000) + 'k' : value);
+                },
+                font: { family: 'Open Sans', size: 10 }
+              },
+              grid: { color: '#f1f5f9' }
+            },
+            x: {
+              ticks: { font: { family: 'Open Sans', size: 11, weight: '600' } },
+              grid: { display: false }
+            }
+          }
+        }
+      });
+
+      const chartAttainmentPill = document.getElementById('chartAttainmentPill');
+      if (chartAttainmentPill) {
+        chartAttainmentPill.textContent = `${attainment}% of Quota`;
+        chartAttainmentPill.className = attainment >= 100
+          ? 'text-xs font-extrabold px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800'
+          : (attainment >= 80 
+             ? 'text-xs font-extrabold px-2.5 py-1 rounded-full bg-amber-100 text-amber-800'
+             : 'text-xs font-extrabold px-2.5 py-1 rounded-full bg-rose-100 text-rose-800');
+      }
+    }
+
+    // Toast notification
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      const toastMsg = document.getElementById('toastMsg');
+      if (!toast || !toastMsg) return;
+      toastMsg.textContent = msg;
+      toast.classList.remove('translate-y-20', 'opacity-0');
+      toast.classList.add('translate-y-0', 'opacity-100');
+      setTimeout(() => {
+        toast.classList.add('translate-y-20', 'opacity-0');
+        toast.classList.remove('translate-y-0', 'opacity-100');
+      }, 3000);
+    }
+
+    function getGoogleSheetsModel() {
+      const repName = document.getElementById('inputRepName').value || 'Alex Morgan';
+      const quota = parseFloat(document.getElementById('inputQuota').value) || 150000;
+      const closedWon = parseFloat(document.getElementById('inputClosedWon').value) || 35000;
+      const weeksLeft = parseFloat(document.getElementById('inputWeeksLeft').value) || 6;
+      const acv = parseFloat(document.getElementById('inputACV').value) || 5869;
+      const salesCycle = parseFloat(document.getElementById('inputSalesCycle').value) || 32;
+
+      const convIntro = (parseFloat(document.getElementById('inputConvIntro').value) || 20) / 100;
+      const convDisc = (parseFloat(document.getElementById('inputConvDisc').value) || 65) / 100;
+      const convProposal = (parseFloat(document.getElementById('inputConvNeeds').value) || 54) / 100;
+
+      return [
+        { row: 1, type: 'header', a: 'TRIMBLE REVPACE QUOTA FORECASTER & PACE PLANNER (GOOGLE SHEETS)', b: '', c: '', d: '', e: '' },
+        { row: 2, type: 'blank', a: '', b: '', c: '', d: '', e: '' },
+        { row: 3, type: 'section', a: '1. TARGETS & CURRENT QUARTER STATUS', b: 'Values', c: 'Unit', d: '', e: 'Description' },
+        { row: 4, type: 'data', a: 'Rep Name', b: repName, c: 'Text', d: '', e: 'Sales Representative', f_b: repName },
+        { row: 5, type: 'data', a: 'Quarterly Quota ($)', b: quota, c: 'USD', d: '', e: 'Target Bookings', f_b: quota },
+        { row: 6, type: 'data', a: 'Closed-Won Bookings ($)', b: closedWon, c: 'USD', d: '', e: 'Actual Bookings To Date', f_b: closedWon },
+        { row: 7, type: 'data', a: 'Weeks Remaining in Quarter', b: weeksLeft, c: 'Weeks', d: '', e: 'Time Runway Left', f_b: weeksLeft },
+        { row: 8, type: 'data', a: 'Average Deal Size / ACV ($)', b: acv, c: 'USD', d: '', e: 'Verified Trimble SFDC SMB ACV Benchmark', f_b: acv },
+        { row: 9, type: 'data', a: 'Median Sales Cycle (Days)', b: salesCycle, c: 'Days', d: '', e: 'Average Days from Creation to Close', f_b: salesCycle },
+        { row: 10, type: 'blank', a: '', b: '', c: '', d: '', e: '' },
+        
+        { row: 11, type: 'section', a: '2. CURRENT ACTIVE PIPELINE BY STAGE', b: 'Open Value ($)', c: 'Win Rate (%)', d: 'Weighted Value ($)', e: 'Deals (#)' },
+        { row: 12, type: 'formula', a: 'Stage 1: Discovery', b: stages[0].amount, c: stages[0].winRate / 100, d: '=B12*C12', e: '=ROUND(B12/$B$8, 1)', exp_d: 'Discovery weighted volume (33.3% WR)', f_b: stages[0].amount, f_c: `${stages[0].winRate}%` },
+        { row: 13, type: 'formula', a: 'Stage 2: Needs Analysis', b: stages[1].amount, c: stages[1].winRate / 100, d: '=B13*C13', e: '=ROUND(B13/$B$8, 1)', exp_d: 'Needs Analysis weighted volume (27.5% WR)', f_b: stages[1].amount, f_c: `${stages[1].winRate}%` },
+        { row: 14, type: 'formula', a: 'Stage 3: Quote & Proposal', b: stages[2].amount, c: stages[2].winRate / 100, d: '=B14*C14', e: '=ROUND(B14/$B$8, 1)', exp_d: 'Proposal weighted volume (54.1% WR)', f_b: stages[2].amount, f_c: `${stages[2].winRate}%` },
+        { row: 15, type: 'formula', a: 'Stage 4: Negotiate / Sent for Signature', b: stages[3].amount, c: stages[3].winRate / 100, d: '=B15*C15', e: '=ROUND(B15/$B$8, 1)', exp_d: 'Negotiation weighted volume (83.1% WR)', f_b: stages[3].amount, f_c: `${stages[3].winRate}%` },
+        { row: 16, type: 'formula_summary', a: 'Total Active Pipeline', b: '=SUM(B12:B15)', c: '=D16/B16', d: '=SUM(D12:D15)', e: '=SUM(E12:E15)', exp_b: 'Total Gross Pipeline in flight', exp_d: 'Total Weighted Revenue Forecast' },
+        { row: 17, type: 'blank', a: '', b: '', c: '', d: '', e: '' },
+
+        { row: 18, type: 'section', a: '3. QUOTA FORECAST & LANDING ANALYSIS', b: 'Formula Result', c: 'Benchmark', d: '', e: 'Logic' },
+        { row: 19, type: 'formula', a: 'Total Weighted Pipeline ($)', b: '=D16', c: 'USD', d: '', e: 'From Stage-weighted Pipe above', exp_b: 'Carries total from Stage Summary' },
+        { row: 20, type: 'formula', a: 'Projected Revenue Landing ($)', b: '=B6+B19', c: 'USD', d: '', e: 'Closed-Won + Weighted Pipeline', exp_b: 'Where the rep will land this quarter' },
+        { row: 21, type: 'formula', a: 'Projected Quota Attainment (%)', b: '=B20/B5', c: '% of Quota', d: '', e: 'Attainment percentage', exp_b: 'Landing divided by Quota Target' },
+        { row: 22, type: 'formula', a: 'Quota Shortfall / Deficit ($)', b: '=MAX(0, B5-B20)', c: 'USD', d: '', e: 'Amount needed to bridge quota', exp_b: 'Zero if on track, else quota gap' },
+        { row: 23, type: 'formula', a: 'Quota Surplus ($)', b: '=MAX(0, B20-B5)', c: 'USD', d: '', e: 'Bookings projected beyond quota', exp_b: 'Accelerators baseline' },
+        { row: 24, type: 'formula', a: 'Pipeline Coverage Ratio', b: '=IF((B5-B6)<=0, "Goal Met", B16/(B5-B6))', c: 'Coverage (x)', d: '', e: 'Target is 2.51x', exp_b: 'Gross Pipeline / Remaining Closed-Won Gap' },
+        { row: 25, type: 'blank', a: '', b: '', c: '', d: '', e: '' },
+
+        { row: 26, type: 'section', a: '4. CONVERSION BENCHMARKS', b: 'Conversion Rate', c: 'Stage Transition', d: '', e: 'Historical Rep Benchmarks' },
+        { row: 27, type: 'data', a: 'Target Accounts -> Intro Meeting Held', b: convIntro, c: 'Accounts to Intro', d: '', e: 'Historical contact to meeting rate', f_b: `${Math.round(convIntro*100)}%` },
+        { row: 28, type: 'data', a: 'Intro Meeting Held -> Discovery Completed', b: convDisc, c: 'Intro to Discovery', d: '', e: 'Show & qualification rate', f_b: `${Math.round(convDisc*100)}%` },
+        { row: 29, type: 'data', a: 'Discovery Completed -> Quote & Proposal', b: convProposal, c: 'Discovery to Proposal', d: '', e: 'Proposal creation rate', f_b: `${Math.round(convProposal*100)}%` },
+        { row: 30, type: 'blank', a: '', b: '', c: '', d: '', e: '' },
+
+        { row: 31, type: 'section', a: '5. REQUIRED PACING TO HIT QUOTA', b: 'Quarter Total', c: 'Pace Per Week', d: 'Calculation Logic', e: 'Action Mandate' },
+        { row: 32, type: 'formula', a: 'Target Revenue Sourced ($)', b: '=IF(B22>0, B22, B5*0.15)', c: '=B32/$B$7', d: 'IF(Gap>0, Gap, 15% Reload)', e: 'Dollar volume to generate', exp_b: 'Gap to bridge or healthy pipeline reload' },
+        { row: 33, type: 'formula', a: 'Deals Needed to Win (#)', b: '=B32/$B$8', c: '=B33/$B$7', d: 'Target Revenue / ACV', e: 'Incremental deals to close', exp_b: 'Wins required by quarter end' },
+        { row: 34, type: 'formula', a: 'Quotes / Proposals to Send (#)', b: '=B33/C14', c: '=B34/$B$7', d: 'Wins Needed / Proposal Win Rate (54.1%)', e: 'Proposals required', exp_b: 'Required proposals sent to clients' },
+        { row: 35, type: 'formula', a: 'Discovery Calls Held (#)', b: '=B34/B29', c: '=B35/$B$7', d: 'Proposals / Discovery Conv.', e: 'Deep-dive calls held', exp_b: 'Qualified discovery conversations' },
+        { row: 36, type: 'formula', a: 'Intro Meetings Held (#)', b: '=B35/B28', c: '=B36/$B$7', d: 'Discovery Calls / Intro Conv.', e: 'First touch meetings completed', exp_b: 'Initial meetings on calendar' },
+        { row: 37, type: 'blank', a: '', b: '', c: '', d: '', e: '' },
+
+        { row: 38, type: 'section', a: '6. CYCLE TIME & STATUS CHECK', b: 'Status / Metric', c: 'Unit', d: '', e: 'Operational Recommendation' },
+        { row: 39, type: 'formula', a: 'Days Remaining in Quarter', b: '=B7*7', c: 'Days', d: '', e: 'Remaining calendar runway', exp_b: 'Weeks remaining multiplied by 7' },
+        { row: 40, type: 'formula', a: 'Can New Leads Close This Quarter?', b: '=IF(B39>=B9*0.75, "YES - SPRINT TOP OF FUNNEL", "WARNING - CYCLE TOO LONG! ACCELERATE STAGE 3/4 & CLOSED-LOST")', c: 'Velocity Check', d: '', e: 'Timeline risk test', exp_b: 'Tests if remaining days >= 75% of Sales Cycle' },
+        { row: 41, type: 'formula', a: 'Quarter Pacing Health Alert', b: '=IF(B21>=1, "ON TRACK (100%+)", IF(B21>=0.8, "WITHIN STRIKING DISTANCE (80-99%)", "CRITICAL DEFICIT (<80%)"))', c: 'Pacing Health', d: '', e: 'Executive visibility alert', exp_b: 'Attainment benchmark threshold' }
+      ];
+    }
+
+    function renderGoogleSheetsGrid() {
+      const rows = getGoogleSheetsModel();
+      const tbody = document.getElementById('sheetsGridBody');
+      if (!tbody) return;
+      tbody.innerHTML = '';
+
+      rows.forEach(r => {
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-indigo-50/40 transition-colors cursor-pointer group';
+
+        if (r.type === 'header') {
+          tr.className = 'bg-slate-800 text-white font-bold font-sans text-xs';
+          tr.innerHTML = `
+            <td class="py-2.5 px-3 text-center border-r border-slate-700 font-mono text-[10px] text-slate-400">${r.row}</td>
+            <td colspan="5" class="py-2.5 px-3.5 tracking-wider text-emerald-400">${r.a}</td>
+          `;
+        } else if (r.type === 'section') {
+          tr.className = 'bg-slate-100 font-bold font-sans text-[11px] text-slate-800 border-t-2 border-slate-200';
+          tr.innerHTML = `
+            <td class="py-2 px-3 text-center border-r border-slate-200 font-mono text-[10px] text-slate-400">${r.row}</td>
+            <td class="py-2 px-3.5 border-r border-slate-200 text-indigo-900">${r.a}</td>
+            <td class="py-2 px-3.5 border-r border-slate-200 text-slate-600">${r.b}</td>
+            <td class="py-2 px-3.5 border-r border-slate-200 text-slate-600">${r.c}</td>
+            <td class="py-2 px-3.5 border-r border-slate-200 text-slate-600">${r.d}</td>
+            <td class="py-2 px-3.5 text-slate-600">${r.e}</td>
+          `;
+        } else if (r.type === 'blank') {
+          tr.className = 'bg-slate-50/50 h-5';
+          tr.innerHTML = `
+            <td class="py-1 px-3 text-center border-r border-slate-200 font-mono text-[10px] text-slate-300">${r.row}</td>
+            <td colspan="5" class="py-1 px-3.5"></td>
+          `;
+        } else {
+          const displayB = typeof r.b === 'string' && r.b.startsWith('=') 
+            ? `<span class="text-indigo-600 font-bold">${r.b}</span>`
+            : (typeof r.b === 'number' ? (r.c === 'USD' ? fmtUSD(r.b) : (r.c === '% of Quota' ? `${Math.round(r.b*100)}%` : r.b)) : (r.f_b || r.b));
+
+          const displayC = typeof r.c === 'string' && r.c.startsWith('=')
+            ? `<span class="text-indigo-600 font-bold">${r.c}</span>`
+            : (r.f_c || r.c);
+
+          const displayD = typeof r.d === 'string' && r.d.startsWith('=')
+            ? `<span class="text-indigo-600 font-bold">${r.d}</span>`
+            : r.d;
+
+          const displayE = typeof r.e === 'string' && r.e.startsWith('=')
+            ? `<span class="text-indigo-600 font-bold">${r.e}</span>`
+            : r.e;
+
+          tr.innerHTML = `
+            <td class="py-2 px-3 text-center border-r border-slate-200 font-mono text-[10px] text-slate-400 group-hover:text-indigo-600 bg-slate-50/60">${r.row}</td>
+            <td class="py-2 px-3.5 border-r border-slate-200 font-sans font-medium text-slate-900" data-cell="A${r.row}" data-formula="${r.a}">${r.a}</td>
+            <td class="py-2 px-3.5 border-r border-slate-200 font-mono" data-cell="B${r.row}" data-formula="${r.b}" data-desc="${r.exp_b || r.e || ''}">${displayB}</td>
+            <td class="py-2 px-3.5 border-r border-slate-200 font-sans text-slate-600" data-cell="C${r.row}" data-formula="${r.c}">${displayC}</td>
+            <td class="py-2 px-3.5 border-r border-slate-200 font-mono text-slate-700" data-cell="D${r.row}" data-formula="${r.d}" data-desc="${r.exp_d || ''}">${displayD}</td>
+            <td class="py-2 px-3.5 font-sans text-slate-500 text-[11px]" data-cell="E${r.row}" data-formula="${r.e}">${displayE}</td>
+          `;
+
+          tr.querySelectorAll('td[data-cell]').forEach(td => {
+            td.addEventListener('click', () => {
+              const cell = td.dataset.cell;
+              const formula = td.dataset.formula || td.textContent;
+              const desc = td.dataset.desc || '';
+              document.getElementById('formulaCellAddress').textContent = cell;
+              document.getElementById('formulaBarContent').textContent = formula;
+              const badge = document.getElementById('formulaExplanationBadge');
+              if (desc) {
+                badge.textContent = desc;
+                badge.classList.remove('hidden');
+              } else {
+                badge.classList.add('hidden');
+              }
+              document.querySelectorAll('#sheetsGridTable td').forEach(el => el.classList.remove('bg-indigo-100/70', 'ring-1', 'ring-indigo-400'));
+              td.classList.add('bg-indigo-100/70', 'ring-1', 'ring-indigo-400');
+            });
+          });
+        }
+
+        tbody.appendChild(tr);
+      });
+    }
+
+    function generateGoogleSheetsTSV() {
+      const rows = getGoogleSheetsModel();
+      return rows.map(r => {
+        if (r.type === 'blank') return '\t\t\t\t';
+        if (r.type === 'header') return `${r.a}\t\t\t\t`;
+        const valB = typeof r.b !== 'undefined' ? r.b : '';
+        const valC = typeof r.c !== 'undefined' ? r.c : '';
+        const valD = typeof r.d !== 'undefined' ? r.d : '';
+        const valE = typeof r.e !== 'undefined' ? r.e : '';
+        return `${r.a}\t${valB}\t${valC}\t${valD}\t${valE}`;
+      }).join('\n');
+    }
+
+    function generateGoogleSheetsCSV() {
+      const rows = getGoogleSheetsModel();
+      return rows.map(r => {
+        if (r.type === 'blank') return ',,,,';
+        const clean = (val) => {
+          if (val === null || typeof val === 'undefined') return '""';
+          const str = String(val).replace(/"/g, '""');
+          return `"${str}"`;
+        };
+        return [clean(r.a), clean(r.b), clean(r.c), clean(r.d), clean(r.e)].join(',');
+      }).join('\r\n');
+    }
+
+    function copyGoogleSheetsClipboard() {
+      const tsv = generateGoogleSheetsTSV();
+      const tempTextArea = document.createElement('textarea');
+      tempTextArea.value = tsv;
+      tempTextArea.style.position = 'fixed';
+      tempTextArea.style.left = '-9999px';
+      document.body.appendChild(tempTextArea);
+      tempTextArea.select();
+      try {
+        document.execCommand('copy');
+        showToast('Google Sheet with formulas copied! Open sheets.new and press Ctrl+V.');
+      } catch (err) {
+        showToast('Unable to copy directly. Please check browser permissions.');
+      }
+      document.body.removeChild(tempTextArea);
+    }
+
+    function downloadGoogleSheetsCSV() {
+      const csvData = generateGoogleSheetsCSV();
+      const blob = new Blob([csvData], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.setAttribute('href', url);
+      link.setAttribute('download', `revpace_smb_quota_forecaster_${new Date().toISOString().slice(0, 10)}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      showToast('CSV downloaded with working Google Sheet formulas!');
+    }
+
+    // Toggle weekly vs daily pace
+    document.getElementById('btnViewWeekly').addEventListener('click', () => {
+      paceMode = 'weekly';
+      document.getElementById('btnViewWeekly').className = 'px-2.5 py-1 rounded-md font-bold bg-white text-slate-800 shadow-sm';
+      document.getElementById('btnViewDaily').className = 'px-2.5 py-1 rounded-md font-medium text-slate-600 hover:text-slate-800';
+      calculateAndRender();
+    });
+
+    document.getElementById('btnViewDaily').addEventListener('click', () => {
+      paceMode = 'daily';
+      document.getElementById('btnViewDaily').className = 'px-2.5 py-1 rounded-md font-bold bg-white text-slate-800 shadow-sm';
+      document.getElementById('btnViewWeekly').className = 'px-2.5 py-1 rounded-md font-medium text-slate-600 hover:text-slate-800';
+      calculateAndRender();
+    });
+
+    // Reset ACV to SFDC Benchmark ($5,869)
+    document.getElementById('resetACVBtn').addEventListener('click', () => {
+      document.getElementById('inputACV').value = 5869;
+      calculateAndRender();
+      showToast('ACV reset to Salesforce historical baseline ($5,869)');
+    });
+
+    // Preset buttons
+    document.getElementById('presetBehindBtn').addEventListener('click', () => {
+      document.getElementById('inputQuota').value = 180000;
+      document.getElementById('inputClosedWon').value = 40000;
+      document.getElementById('inputWeeksLeft').value = 5;
+      stages[0].amount = 50000; // Disc
+      stages[1].amount = 30000; // Needs
+      stages[2].amount = 40000; // Prop
+      stages[3].amount = 20000; // Neg
+      renderStageInputs();
+      calculateAndRender();
+      showToast('Loaded deficit scenario ($180k quota, 5 wks left)');
+    });
+
+    document.getElementById('presetAheadBtn').addEventListener('click', () => {
+      document.getElementById('inputQuota').value = 150000;
+      document.getElementById('inputClosedWon').value = 95000;
+      document.getElementById('inputWeeksLeft').value = 6;
+      stages[0].amount = 70000;
+      stages[1].amount = 40000;
+      stages[2].amount = 70000;
+      stages[3].amount = 45000;
+      renderStageInputs();
+      calculateAndRender();
+      showToast('Loaded ahead-of-pace scenario ($150k quota, $95k won)');
+    });
+
+    // Switch between Interactive Simulator and Google Sheets Blueprint View
+    document.getElementById('tabSimulatorBtn').addEventListener('click', () => {
+      document.getElementById('simulatorView').classList.remove('hidden');
+      document.getElementById('sheetsView').classList.add('hidden');
+      document.getElementById('tabSimulatorBtn').className = 'px-4 py-2 text-xs font-bold rounded-xl bg-trimble-blue text-white shadow-sm flex items-center space-x-2 transition-all';
+      document.getElementById('tabSheetsBtn').className = 'px-4 py-2 text-xs font-bold rounded-xl bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 shadow-sm flex items-center space-x-2 transition-all';
+    });
+
+    document.getElementById('tabSheetsBtn').addEventListener('click', () => {
+      document.getElementById('simulatorView').classList.add('hidden');
+      document.getElementById('sheetsView').classList.remove('hidden');
+      document.getElementById('tabSheetsBtn').className = 'px-4 py-2 text-xs font-bold rounded-xl bg-trimble-blue text-white shadow-sm flex items-center space-x-2 transition-all';
+      document.getElementById('tabSimulatorBtn').className = 'px-4 py-2 text-xs font-bold rounded-xl bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 shadow-sm flex items-center space-x-2 transition-all';
+      renderGoogleSheetsGrid();
+    });
+
+    // Copy and export actions
+    document.getElementById('copyToSheetsBtn').addEventListener('click', copyGoogleSheetsClipboard);
+    document.getElementById('copySheetDirectBtn').addEventListener('click', copyGoogleSheetsClipboard);
+    document.getElementById('downloadCsvBtn').addEventListener('click', downloadGoogleSheetsCSV);
+
+    document.getElementById('resetDefaultsBtn').addEventListener('click', () => {
+      stages = JSON.parse(JSON.stringify(defaultStages));
+      document.getElementById('inputRepName').value = 'Alex Morgan';
+      document.getElementById('inputWeeksLeft').value = 6;
+      document.getElementById('inputQuota').value = 150000;
+      document.getElementById('inputClosedWon').value = 35000;
+      document.getElementById('inputACV').value = 5869;
+      document.getElementById('inputSalesCycle').value = 32;
+      document.getElementById('inputConvIntro').value = 20;
+      document.getElementById('inputConvDisc').value = 65;
+      document.getElementById('inputConvNeeds').value = 54;
+      renderStageInputs();
+      calculateAndRender();
+      showToast('Reset to verified Trimble SFDC benchmarks ($5,869 ACV | 39.9% WR)');
+    });
+
+    document.getElementById('tabSheetsBtn').addEventListener('click', () => {
+      document.getElementById('simulatorView').classList.add('hidden');
+      document.getElementById('sheetsView').classList.remove('hidden');
+      document.getElementById('tabSheetsBtn').className = 'px-4 py-2 text-xs font-bold rounded-xl bg-emerald-600 text-white shadow-sm flex items-center space-x-2 transition-all';
+      document.getElementById('tabSimulatorBtn').className = 'px-4 py-2 text-xs font-bold rounded-xl bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 shadow-sm flex items-center space-x-2 transition-all';
+      renderGoogleSheetsGrid();
+    });
+
+    // Copy and export actions
+    document.getElementById('copyToSheetsBtn').addEventListener('click', copyGoogleSheetsClipboard);
+    document.getElementById('copySheetDirectBtn').addEventListener('click', copyGoogleSheetsClipboard);
+    document.getElementById('downloadCsvBtn').addEventListener('click', downloadGoogleSheetsCSV);
+
+    document.getElementById('resetDefaultsBtn').addEventListener('click', () => {
+      stages = JSON.parse(JSON.stringify(defaultStages));
+      document.getElementById('inputRepName').value = 'Alex Morgan';
+      document.getElementById('inputWeeksLeft').value = 6;
+      document.getElementById('inputQuota').value = 150000;
+      document.getElementById('inputClosedWon').value = 35000;
+      document.getElementById('inputACV').value = 5869;
+      document.getElementById('inputSalesCycle').value = 32;
+      document.getElementById('inputConvIntro').value = 20;
+      document.getElementById('inputConvDisc').value = 65;
+      document.getElementById('inputConvNeeds').value = 54;
+      renderStageInputs();
+      calculateAndRender();
+      showToast('Reset to verified SFDC benchmarks ($5,869 ACV | 39.9% WR)');
+    });
+
+    document.getElementById('exportPlanBtn').addEventListener('click', () => {
+      const repName = document.getElementById('inputRepName').value || 'Rep';
+      const quota = parseFloat(document.getElementById('inputQuota').value) || 0;
+      const closedWon = parseFloat(document.getElementById('inputClosedWon').value) || 0;
+      const weeksLeft = document.getElementById('inputWeeksLeft').value || 6;
+      const proj = document.getElementById('cardProjectedTotal').textContent;
+      const gap = document.getElementById('gapMetric').textContent;
+      const weeklyWins = document.getElementById('metricWinsPace').textContent;
+      const weeklyProposals = document.getElementById('metricProposalsPace').textContent;
+      const weeklyDisc = document.getElementById('metricDiscPace').textContent;
+      const weeklyIntros = document.getElementById('metricIntroPace').textContent;
+
+      const summary = `RevPace Quota Pacing Plan for ${repName}
+- Quota: ${fmtUSD(quota)} | Closed-Won: ${fmtUSD(closedWon)}
+- Weeks Remaining: ${weeksLeft}
+- Projected Landing: ${proj}
+- Quota Gap / Surplus: ${gap}
+- Required Pace:
+  - Closed Deals: ${weeklyWins}
+  - Quotes/Proposals: ${weeklyProposals}
+  - Discovery Calls: ${weeklyDisc}
+  - Intro Meetings: ${weeklyIntros}`;
+
+      const tempTextArea = document.createElement('textarea');
+      tempTextArea.value = summary;
+      tempTextArea.style.position = 'fixed';
+      tempTextArea.style.left = '-9999px';
+      document.body.appendChild(tempTextArea);
+      tempTextArea.select();
+      try {
+        document.execCommand('copy');
+        showToast('1:1 Plan summary copied to clipboard!');
+      } catch (e) {
+        showToast('Unable to copy summary.');
+      }
+      document.body.removeChild(tempTextArea);
+    });
+
+    // Inputs event listeners
+    ['inputRepName', 'inputWeeksLeft', 'inputQuota', 'inputClosedWon', 'inputACV', 'inputSalesCycle'].forEach(id => {
+      document.getElementById(id).addEventListener('input', calculateAndRender);
+    });
+
+    ['inputConvIntro', 'inputConvDisc', 'inputConvNeeds'].forEach(id => {
+      document.getElementById(id).addEventListener('input', calculateAndRender);
+    });
+
+    // Initialize on window load
+    window.addEventListener('DOMContentLoaded', () => {
+      renderStageInputs();
+      calculateAndRender();
+    });
+  </script>
+</body>
+</html>
