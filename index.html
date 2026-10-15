@@ -773,7 +773,7 @@
 
       // 3. Projected Landing & Gap
       const projectedRevenue = closedWon + totalWeightedPipeline;
-      const attainmentPct = Math.round((projectedRevenue / quota) * 100);
+const attainmentPct = ((projectedRevenue / quota) * 100).toFixed(1);
       const gapToQuota = Math.max(0, quota - projectedRevenue);
       const surplus = projectedRevenue > quota ? projectedRevenue - quota : 0;
       const coverageRatio = (totalRawPipeline / (quota - closedWon > 0 ? quota - closedWon : 1)).toFixed(2);
@@ -842,7 +842,7 @@
       document.getElementById('weeklyIntrosMetric').textContent = `${(introMeetingsNeeded / weeksLeft).toFixed(1)} / wk`;
       document.getElementById('weeklyProposalsMetric').textContent = `${(proposalsNeeded / weeksLeft).toFixed(1)} / wk`;
 
-      if (attainmentPct >= 100) {
+if (attainmentPct >= 100) {
         statusAlert.className = 'mb-6 rounded-2xl p-4 sm:p-5 border border-emerald-200 bg-emerald-50/70 transition-all duration-300 flex flex-col md:flex-row items-start md:items-center justify-between gap-4';
         statusIconBg.className = 'w-12 h-12 rounded-xl bg-trimble-green flex items-center justify-center text-white shrink-0 shadow-sm';
         statusBadge.className = 'text-xs uppercase font-extrabold px-2.5 py-0.5 rounded-full bg-emerald-200 text-emerald-900';
@@ -853,13 +853,13 @@
         statusIconBg.className = 'w-12 h-12 rounded-xl bg-trimble-yellowDark flex items-center justify-center text-white shrink-0 shadow-sm';
         statusBadge.className = 'text-xs uppercase font-extrabold px-2.5 py-0.5 rounded-full bg-amber-200 text-amber-900';
         statusBadge.textContent = 'Striking Distance (80-99%)';
-        statusHeadline.textContent = `Projected at ${attainmentPct}% (${fmtUSD(projectedRevenue)}). ${fmtUSD(gapToQuota)} gap to close.`;
+        statusHeadline.textContent = `Projected to land at ${attainmentPct}% of Quota (${fmtUSD(projectedRevenue)})`;
       } else {
         statusAlert.className = 'mb-6 rounded-2xl p-4 sm:p-5 border border-rose-200 bg-rose-50/70 transition-all duration-300 flex flex-col md:flex-row items-start md:items-center justify-between gap-4';
         statusIconBg.className = 'w-12 h-12 rounded-xl bg-rose-600 flex items-center justify-center text-white shrink-0 shadow-sm';
         statusBadge.className = 'text-xs uppercase font-extrabold px-2.5 py-0.5 rounded-full bg-rose-200 text-rose-900';
         statusBadge.textContent = 'Critical Pipeline Gap (<80%)';
-        statusHeadline.textContent = `Projected at ${attainmentPct}% (${fmtUSD(projectedRevenue)}). Need ${(introMeetingsNeeded / weeksLeft).toFixed(1)} intros/week immediately.`;
+        statusHeadline.textContent = `Projected to land at ${attainmentPct}% of Quota (${fmtUSD(projectedRevenue)})`;
       }
 
       // Populate all 5 stages in Card 4
@@ -907,7 +907,7 @@
       }
 
       const projected = closedWon + weightedPipe;
-      const attainment = Math.round((projected / quota) * 100);
+      const attainment = ((projected / quota) * 100).toFixed(1);
       
       forecastChartInstance = new Chart(ctx, {
         type: 'bar',
